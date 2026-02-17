@@ -50,17 +50,19 @@ export function getOffsetLabel(date: Date, tz: string): string {
 /** Detect if a timezone is currently observing daylight saving time */
 export function isDST(date: Date, tz: string): boolean {
   try {
-    const fmt = (d: Date) =>
-      new Intl.DateTimeFormat("en", {
+    const getOffset = (d: Date) => {
+      const parts = new Intl.DateTimeFormat("en", {
         timeZone: tz,
         timeZoneName: "longOffset",
-      }).format(d);
+      }).formatToParts(d);
+      return parts.find((p) => p.type === "timeZoneName")?.value ?? "";
+    };
 
-    const jan = fmt(new Date(date.getFullYear(), 0, 1));
-    const jul = fmt(new Date(date.getFullYear(), 6, 1));
+    const janOffset = getOffset(new Date(date.getFullYear(), 0, 1));
+    const julOffset = getOffset(new Date(date.getFullYear(), 6, 1));
 
-    if (jan === jul) return false;
-    return fmt(date) !== jan;
+    if (janOffset === julOffset) return false;
+    return getOffset(date) !== janOffset;
   } catch {
     return false;
   }
